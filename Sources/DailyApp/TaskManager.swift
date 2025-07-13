@@ -19,7 +19,7 @@ struct DailyTask: Identifiable, Codable {
     }
 }
 
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 class TaskManager: ObservableObject {
     @Published var todaysTasks: [DailyTask] = []
     

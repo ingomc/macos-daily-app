@@ -1,124 +1,202 @@
 import SwiftUI
 
-@available(macOS 14.0, *)
 struct ContentView: View {
     @StateObject private var taskManager = TaskManager()
     @State private var newTaskText = ""
     @FocusState private var isTextFieldFocused: Bool
+    @State private var hoveredTask: UUID? = nil
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Image(systemName: "calendar")
-                    .foregroundColor(.blue)
-                Text("Tägliche Aufgaben")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                Spacer()
-                Text(DateFormatter.dateFormatter.string(from: Date()))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+        ZStack {
+            // Liquid Glass Hintergrund für macOS 15+
+            if #available(macOS 15.0, *) {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.1),
+                                Color.blue.opacity(0.05),
+                                Color.purple.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 8)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 20)
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.2), .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1
+                            )
+                    }
+            } else {
+                // Fallback für ältere Versionen
+                Rectangle()
+                    .fill(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(radius: 10)
             }
-            .padding()
-            .background(Color(.controlBackgroundColor))
             
-            // Eingabefeld - Spotlight-ähnlich
-            HStack {
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.blue)
-                    .font(.system(size: 16))
-                
-                TextField("Was machst du heute?", text: $newTaskText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 16))
-                    .focused($isTextFieldFocused)
-                    .onSubmit {
-                        addTask()
+            VStack(spacing: 16) {
+                // Header
+                HStack {
+                    if #available(macOS 15.0, *) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .symbolEffect(.pulse.wholeSymbol, options: .repeating)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
                     }
-                    .onKeyPress(.escape) {
-                        // ESC schließt das Popover
-                        NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
-                        return .handled
-                    }
-                
-                if !newTaskText.isEmpty {
-                    Button(action: { 
-                        newTaskText = "" 
-                        isTextFieldFocused = true
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Text löschen")
-                }
-            }
-            .padding(12)
-            .background(Color(.textBackgroundColor))
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isTextFieldFocused ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
-            )
-            .padding(.horizontal)
-            .padding(.top, 8)
-            
-            // Task Liste
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(taskManager.todaysTasks) { task in
-                        TaskRowView(task: task) {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                taskManager.removeTask(task)
-                            }
-                        }
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .top).combined(with: .opacity),
-                            removal: .move(edge: .trailing).combined(with: .opacity)
-                        ))
-                    }
-                }
-                .padding(.horizontal)
-                .animation(.easeInOut, value: taskManager.todaysTasks.count)
-            }
-            .frame(maxHeight: 200)
-            
-            if taskManager.todaysTasks.isEmpty {
-                VStack {
-                    Image(systemName: "list.bullet")
+                    
+                    Text("Daily Tasks")
                         .font(.title2)
-                        .foregroundColor(.secondary)
-                    Text("Noch keine Aufgaben für heute")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Text(currentDateString())
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            if #available(macOS 15.0, *) {
+                                Capsule()
+                                    .fill(.regularMaterial)
+                                    .overlay {
+                                        Capsule()
+                                            .strokeBorder(.white.opacity(0.1), lineWidth: 0.5)
+                                    }
+                            } else {
+                                Capsule()
+                                    .fill(Color(.controlBackgroundColor))
+                            }
+                        }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            
-            // Footer
-            HStack {
-                Text("\(taskManager.todaysTasks.count) Aufgaben heute")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
                 
-                if !taskManager.todaysTasks.isEmpty {
-                    Button("Alle löschen") {
-                        taskManager.clearAllTasks()
+                // Eingabefeld
+                HStack(spacing: 12) {
+                    if #available(macOS 15.0, *) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.green, .mint],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .symbolEffect(.bounce, value: newTaskText.isEmpty)
+                    } else {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.green)
                     }
-                    .buttonStyle(.plain)
-                    .font(.caption)
-                    .foregroundColor(.red)
+                    
+                    TextField("Was hast du heute gemacht?", text: $newTaskText)
+                        .textFieldStyle(.plain)
+                        .font(.body)
+                        .focused($isTextFieldFocused)
+                        .onSubmit {
+                            addTask()
+                        }
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background {
+                            if #available(macOS 15.0, *) {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.regularMaterial)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .strokeBorder(
+                                                LinearGradient(
+                                                    colors: isTextFieldFocused ? 
+                                                        [.blue.opacity(0.5), .purple.opacity(0.3)] : 
+                                                        [.white.opacity(0.1), .clear],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ),
+                                                lineWidth: isTextFieldFocused ? 1.5 : 0.5
+                                            )
+                                    }
+                            } else {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(.controlBackgroundColor))
+                                    .stroke(isTextFieldFocused ? .blue : .clear, lineWidth: 1)
+                            }
+                        }
                 }
+                .padding(.horizontal, 20)
                 
-                Text("⌘⇧D")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .padding(.leading, 8)
+                // Aufgabenliste
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(taskManager.tasks) { task in
+                            TaskRowView(
+                                task: task,
+                                isHovered: hoveredTask == task.id,
+                                onDelete: {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        taskManager.deleteTask(task)
+                                    }
+                                }
+                            )
+                            .onHover { isHovering in
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    hoveredTask = isHovering ? task.id : nil
+                                }
+                            }
+                        }
+                        
+                        if taskManager.tasks.isEmpty {
+                            VStack(spacing: 12) {
+                                if #available(macOS 15.0, *) {
+                                    Image(systemName: "list.bullet.clipboard")
+                                        .font(.system(size: 32))
+                                        .foregroundStyle(.secondary)
+                                        .symbolEffect(.pulse.wholeSymbol, options: .repeating)
+                                } else {
+                                    Image(systemName: "list.bullet.clipboard")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Text("Noch keine Aufgaben heute")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                
+                                Text("Füge deine erste Aufgabe hinzu!")
+                                    .font(.caption)
+                                    .foregroundColor(.tertiary)
+                            }
+                            .padding(.vertical, 32)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .frame(maxHeight: 150)
+                
+                Spacer(minLength: 20)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
         }
         .frame(width: 400, height: 300)
         .onAppear {
@@ -127,63 +205,105 @@ struct ContentView: View {
     }
     
     private func addTask() {
-        let trimmedText = newTaskText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedText.isEmpty {
-            taskManager.addTask(text: trimmedText)
+        guard !newTaskText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            taskManager.addTask(newTaskText.trimmingCharacters(in: .whitespacesAndNewlines))
             newTaskText = ""
-            isTextFieldFocused = true
         }
+    }
+    
+    private func currentDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy"
+        return formatter.string(from: Date())
     }
 }
 
-@available(macOS 14.0, *)
 struct TaskRowView: View {
-    let task: DailyTask
+    let task: Task
+    let isHovered: Bool
     let onDelete: () -> Void
     
     var body: some View {
-        HStack {
-            Circle()
-                .fill(.blue)
-                .frame(width: 6, height: 6)
+        HStack(spacing: 12) {
+            if #available(macOS 15.0, *) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.body)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.green, .mint],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .symbolEffect(.bounce, value: task.id)
+            } else {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.body)
+                    .foregroundColor(.green)
+            }
             
             Text(task.text)
-                .font(.system(size: 14))
+                .font(.body)
+                .foregroundColor(.primary)
                 .lineLimit(2)
+                .multilineTextAlignment(.leading)
             
             Spacer()
             
-            Text(task.timeString)
+            Text(timeString(from: task.timestamp))
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
+                .opacity(isHovered ? 0.5 : 1.0)
             
-            Button(action: onDelete) {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
+            if isHovered {
+                Button(action: onDelete) {
+                    if #available(macOS 15.0, *) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.body)
+                            .foregroundStyle(.red)
+                            .symbolEffect(.bounce, value: isHovered)
+                    } else {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.body)
+                            .foregroundColor(.red)
+                    }
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
             }
-            .buttonStyle(.plain)
-            .opacity(0.7)
-            .help("Aufgabe löschen")
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background {
+            if #available(macOS 15.0, *) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.regularMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(
+                                .white.opacity(isHovered ? 0.15 : 0.05),
+                                lineWidth: 0.5
+                            )
+                    }
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.controlBackgroundColor).opacity(isHovered ? 0.8 : 0.6))
+            }
+        }
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isHovered)
+    }
+    
+    private func timeString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
-extension DateFormatter {
-    static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.locale = Locale(identifier: "de_DE")
-        return formatter
-    }()
-}
-
-#if swift(>=5.9)
-@available(macOS 14.0, *)
 #Preview {
     ContentView()
+        .frame(width: 400, height: 300)
 }
-#endif
