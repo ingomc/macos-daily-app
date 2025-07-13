@@ -17,7 +17,7 @@ struct AppContentView: View {
     var body: some View {
         ZStack {
             AppBackgroundView()
-                .opacity(0.7 + liquidGlassOpacity * 0.1) // Mehr Transparenz
+                .opacity(0.1 + liquidGlassOpacity * 0.02) // Noch transparenter
             
             VStack(spacing: 16) {
                 AppHeaderView(
@@ -127,10 +127,14 @@ struct LiquidGlassLayer: View {
         RoundedRectangle(cornerRadius: 24)
             .fill(.clear) // Komplett transparent als Basis
             .background {
-                // Sehr dünne Glas-Schicht
+                // Klares Glas - kein Material mehr
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.3) // Viel transparenter
+                    .fill(.clear)
+                    .background {
+                        // Nur minimale Glasreflexion
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(Color.white.opacity(0.08))
+                    }
             }
             .overlay {
                 RefractionOverlay()
@@ -139,13 +143,32 @@ struct LiquidGlassLayer: View {
                 LiquidFlowOverlay(glassIntensity: glassIntensity)
             }
             .clipShape(RoundedRectangle(cornerRadius: 24))
-            .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10) // Weniger Schatten
-            .shadow(color: .blue.opacity(0.08), radius: 10, x: 0, y: 3)
+            .shadow(color: .black.opacity(0.1), radius: 15, x: 0, y: 8) // Minimaler Schatten
+            .shadow(color: .blue.opacity(0.04), radius: 8, x: 0, y: 2)
             .overlay {
                 HighlightBorder()
             }
             .overlay {
                 InnerGlow()
+            }
+            .overlay {
+                // Zusätzliche Hauptfenster-Reflexionen
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(0.2),
+                                .clear,
+                                .cyan.opacity(0.1),
+                                .clear,
+                                .white.opacity(0.15)
+                            ],
+                            startPoint: .topTrailing,
+                            endPoint: .bottomLeading
+                        ),
+                        lineWidth: 0.8
+                    )
+                    .padding(3)
             }
     }
 }
@@ -156,10 +179,10 @@ struct RefractionOverlay: View {
     var body: some View {
         LinearGradient(
             colors: [
-                Color.white.opacity(0.05), // Viel transparenter
-                Color.cyan.opacity(0.03),
-                Color.blue.opacity(0.02),
-                Color.purple.opacity(0.01),
+                Color.white.opacity(0.08), // Verstärkte Reflexionen
+                Color.cyan.opacity(0.05),
+                Color.white.opacity(0.04),
+                Color.purple.opacity(0.02),
                 Color.clear
             ],
             startPoint: .topLeading,
@@ -177,9 +200,9 @@ struct LiquidFlowOverlay: View {
     var body: some View {
         LinearGradient(
             colors: [
-                Color.white.opacity(0.03 + glassIntensity * 0.02), // Transparenter
-                Color.clear,
-                Color.blue.opacity(0.02 + glassIntensity * 0.01)
+                Color.white.opacity(0.04 + glassIntensity * 0.03), // Verstärkte animierte Reflexionen
+                Color.cyan.opacity(0.02 + glassIntensity * 0.015),
+                Color.white.opacity(0.015 + glassIntensity * 0.01)
             ],
             startPoint: UnitPoint(x: -0.3 + glassIntensity, y: -0.3 + glassIntensity),
             endPoint: UnitPoint(x: 1.3 + glassIntensity, y: 1.3 + glassIntensity)
@@ -196,17 +219,17 @@ struct HighlightBorder: View {
             .strokeBorder(
                 LinearGradient(
                     colors: [
-                        .white.opacity(0.2), // Transparentere Borders
-                        .white.opacity(0.08),
-                        .cyan.opacity(0.05),
-                        .clear,
-                        .clear,
-                        .white.opacity(0.04)
+                        .white.opacity(0.4), // Deutlich stärkere Glasreflexionen
+                        .white.opacity(0.3),
+                        .cyan.opacity(0.15),
+                        .white.opacity(0.25),
+                        .purple.opacity(0.08),
+                        .white.opacity(0.35)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                lineWidth: 1.5 // Dünnere Border
+                lineWidth: 1.8 // Noch dickerer Rahmen für prominente Reflexionen
             )
     }
 }
@@ -216,7 +239,7 @@ struct HighlightBorder: View {
 struct InnerGlow: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 22)
-            .strokeBorder(.white.opacity(0.03), lineWidth: 0.5) // Sehr transparent
+            .strokeBorder(.white.opacity(0.15), lineWidth: 1.0) // Deutlich sichtbare innere Reflexion
             .padding(1.5)
     }
 }
@@ -366,10 +389,14 @@ struct AppTextFieldBackground: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(.clear) // Transparent als Basis
                 .background {
-                    // Sehr dünne Material-Schicht
+                    // Klares Glas ohne Material
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.4) // Sehr transparent
+                        .fill(.clear)
+                        .background {
+                            // Nur minimale Glasschicht
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.white.opacity(0.06))
+                        }
                 }
                 .overlay {
                     RoundedRectangle(cornerRadius: 14)
@@ -382,7 +409,7 @@ struct AppTextFieldBackground: View {
                 .overlay {
                     // Innerer Glasglanz für Tiefe
                     RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(.white.opacity(0.04), lineWidth: 0.4)
+                        .strokeBorder(.white.opacity(0.06), lineWidth: 0.4) // Sichtbare Reflexion
                         .padding(1.2)
                 }
         } else {
@@ -756,10 +783,14 @@ struct AppTaskRowBackground: View {
             RoundedRectangle(cornerRadius: compact ? 10 : 12)
                 .fill(.clear) // Transparent als Basis
                 .background {
-                    // Sehr dünne Material-Schicht
+                    // Klares Glas ohne Material
                     RoundedRectangle(cornerRadius: compact ? 10 : 12)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.3) // Sehr transparent
+                        .fill(.clear)
+                        .background {
+                            // Nur minimale Glasschicht
+                            RoundedRectangle(cornerRadius: compact ? 10 : 12)
+                                .fill(Color.white.opacity(0.05))
+                        }
                 }
                 .overlay {
                     RoundedRectangle(cornerRadius: compact ? 10 : 12)
@@ -771,7 +802,7 @@ struct AppTaskRowBackground: View {
                 .overlay {
                     // Innerer Glasglanz
                     RoundedRectangle(cornerRadius: compact ? 8 : 10)
-                        .strokeBorder(.white.opacity(0.03), lineWidth: 0.3)
+                        .strokeBorder(.white.opacity(0.05), lineWidth: 0.3) // Dezente Reflexion
                         .padding(1)
                 }
         } else {
@@ -816,14 +847,16 @@ struct LiquidGlassDateBadge: View {
     var body: some View {
         Capsule()
             .fill(.clear)
-            .background {
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.3) // Sehr transparent
+            .background {            Capsule()
+                .fill(.clear)
+                .background {
+                    // Klares Glas ohne Material
+                    Capsule()
+                        .fill(Color.white.opacity(0.05))
+                }
             }
-            .overlay {
-                Capsule()
-                    .strokeBorder(.white.opacity(0.06), lineWidth: 0.4)
+            .overlay {            Capsule()
+                .strokeBorder(.white.opacity(0.08), lineWidth: 0.4) // Dezente Badge-Reflexion
             }
     }
 }
