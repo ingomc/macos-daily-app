@@ -1,0 +1,63 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Wichtig für Git History und Tags
+    
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: "6.0"
+    
+    - name: Generate Version
+      run: |
+        # Generiere AppVersion.swift wenn noch nicht vorhanden
+        if [ ! -f "Sources/DailyApp/AppVersion.swift" ]; then
+          make version
+        fi
+    
+    - name: Build Debug
+      run: swift build
+    
+    - name: Build Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: swift build -c release
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: .build/release/DailyApp
+        generate_release_notes: true
+        body: |
+          ## Daily App ${{ github.ref_name }}
+          
+          ### 🚀 Release Info
+          - **Version**: ${{ github.ref_name }}
+          - **Build**: Automated GitHub Release
+          - **Date**: ${{ steps.date.outputs.date }}
+          
+          ### 📦 Installation
+          1. Download `DailyApp` binary
+          2. Move to `/Applications/`
+          3. Remove quarantine: `xattr -dr com.apple.quarantine "/Applications/DailyApp"`
+          4. Run the app
+          
+          ### ✨ Features
+          - Native macOS Liquid Glass UI
+          - Global hotkey: Cmd+Shift+D
+          - Menu bar integration
+          - Persistent task storage

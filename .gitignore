@@ -9,7 +9,7 @@ DerivedData/
 .netrc
 
 # Generated files
-Sources/DailyApp/AppVersion.swift
+# Sources/DailyApp/AppVersion.swift  # Wird als Fallback committed, aber vom Makefile überschrieben
 
 # App builds
 Daily App.app/

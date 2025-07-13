@@ -157,13 +157,19 @@ jobs:
 
 ### Fallback für CI/CD
 
-Die App verwendet intelligente Fallback-Mechanismen, wenn `AppVersion.swift` nicht verfügbar ist:
+Die App verwendet eine committed `AppVersion.swift` als Fallback:
 
-- **Version**: v0.4.0-dev (statt Git Tag)
-- **Build**: CI Build + Datum (statt Build Number)  
-- **Git**: Unknown (statt Git Hash)
+- **Fallback-Version**: v0.4.0-dev (für CI/CD und Entwicklung)
+- **Makefile überschreibt**: Lokale Builds generieren automatisch aktuelle Version
+- **Git-Status**: AppVersion.swift wird committed aber lokal überschrieben
 
-Dies ermöglicht es, die App auch in CI/CD-Umgebungen zu kompilieren, wo die Version-Generation fehlschlägt.
+**Workflow**:
+1. `AppVersion.swift` existiert immer als Fallback
+2. `make build` überschreibt mit aktueller Git-Version  
+3. CI/CD kann immer kompilieren, auch ohne Makefile
+4. Entwickler bekommen automatisch die richtige Version
+
+Dies löst das CI/CD-Problem komplett und ermöglicht sowohl lokale als auch automatisierte Builds.
 
 ## Versioning Schema
 

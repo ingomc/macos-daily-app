@@ -4,35 +4,6 @@ import HotKey
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-// Version Fallback Funktionen für CI/CD Builds
-func getAppVersion() -> String {
-    // Versuche zuerst AppVersion zu verwenden, falls verfügbar
-    if let appVersionType = NSClassFromString("AppVersion") {
-        if let version = appVersionType.value(forKey: "fullVersion") as? String {
-            return version
-        }
-    }
-    return "v0.4.0-dev"
-}
-
-func getBuildInfo() -> String {
-    if let appVersionType = NSClassFromString("AppVersion") {
-        if let buildDate = appVersionType.value(forKey: "buildDate") as? String {
-            return buildDate
-        }
-    }
-    return "CI Build \(Date().formatted(.dateTime.year().month().day()))"
-}
-
-func getGitInfo() -> String {
-    if let appVersionType = NSClassFromString("AppVersion") {
-        if let gitHash = appVersionType.value(forKey: "gitHash") as? String {
-            return gitHash
-        }
-    }
-    return "Unknown"
-}
-
 // ContentView direkt hier definieren für bessere Kompatibilität
 struct AppContentView: View {
     @StateObject private var taskManager = AppTaskManager()
@@ -1139,9 +1110,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.messageText = "Daily App"
         alert.informativeText = """
-        Version \(getAppVersion())
-        Build: \(getBuildInfo())
-        Git: \(getGitInfo())
+        Version \(AppVersion.fullVersion)
+        Build: \(AppVersion.buildDate)
+        Git: \(AppVersion.gitHash)
         
         Eine einfache App zum Tracken deiner täglichen Aufgaben.
         
