@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:macos-daily-app}",
+            "name": "Debug DailyApp",
+            "program": "${workspaceFolder:macos-daily-app}/.build/debug/DailyApp",
+            "preLaunchTask": "swift: Build Debug DailyApp"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:macos-daily-app}",
+            "name": "Release DailyApp",
+            "program": "${workspaceFolder:macos-daily-app}/.build/release/DailyApp",
+            "preLaunchTask": "swift: Build Release DailyApp"
+        }
+    ]
+}
