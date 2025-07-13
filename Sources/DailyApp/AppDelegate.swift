@@ -11,33 +11,50 @@ struct AppContentView: View {
     
     var body: some View {
         ZStack {
-            // Liquid Glass Hintergrund für macOS 15+
+            // Liquid Glass Hintergrund für macOS 15+ - durchsichtiger
             if #available(macOS 15.0, *) {
                 Rectangle()
                     .fill(.ultraThinMaterial)
+                    .opacity(0.7)  // Durchsichtiger Haupthintergrund
                     .overlay {
+                        // Noch glasigerer Effekt mit mehr Transparenz
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.1),
-                                Color.blue.opacity(0.05),
-                                Color.purple.opacity(0.05)
+                                Color.white.opacity(0.08),
+                                Color.blue.opacity(0.04),
+                                Color.purple.opacity(0.03),
+                                Color.clear
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 8)
+                    .shadow(color: .black.opacity(0.4), radius: 25, x: 0, y: 10)
                     .overlay {
+                        // Glasiger Rand-Effekt wie im Dock
                         RoundedRectangle(cornerRadius: 20)
                             .strokeBorder(
                                 LinearGradient(
-                                    colors: [.white.opacity(0.2), .clear],
+                                    colors: [
+                                        .white.opacity(0.3),
+                                        .white.opacity(0.08),
+                                        .clear
+                                    ],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 ),
-                                lineWidth: 1
+                                lineWidth: 1.5
                             )
+                    }
+                    .overlay {
+                        // Innerer Glow für extra Glaseffekt
+                        RoundedRectangle(cornerRadius: 18)
+                            .strokeBorder(
+                                .white.opacity(0.1),
+                                lineWidth: 0.5
+                            )
+                            .padding(1)
                     }
             } else {
                 // Fallback für ältere Versionen
