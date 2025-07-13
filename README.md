@@ -24,8 +24,14 @@ Eine native macOS Menu Bar Anwendung zum Tracken täglicher Aufgaben mit einem S
 1. Gehe zu [Releases](../../releases)
 2. Lade die neueste `Daily-App.dmg` herunter
 3. Öffne das DMG und ziehe die App in den Applications Ordner
-4. Starte die App - das Icon erscheint in der Menüleiste
-5. Drücke `Cmd+Shift+D` zum ersten Mal öffnen
+4. **Wichtig für unsignierte Apps**: Entferne die Quarantäne-Kennzeichnung:
+   ```bash
+   xattr -dr com.apple.quarantine "/Applications/Daily App.app"
+   ```
+5. Starte die App - das Icon erscheint in der Menüleiste
+6. Drücke `Cmd+Shift+D` zum ersten Mal öffnen
+
+> **⚠️ Hinweis zur Code-Signierung**: Da die App momentan nicht signiert ist, muss die Quarantäne-Kennzeichnung manuell entfernt werden. Dies ist ein einmaliger Vorgang nach der Installation.
 
 ### Manueller Build
 ```bash
@@ -40,6 +46,42 @@ swift build -c release
 - **macOS Tahoe (15.0) oder neuer** für Liquid Glass Effekte
 - **Apple Silicon oder Intel Mac**
 - Für Entwicklung: **Xcode 15.0+** und **Swift 5.9+**
+
+## 🛠️ Troubleshooting
+
+### App lässt sich nicht öffnen
+Falls die App nicht startet, versuche folgende Schritte:
+
+1. **Quarantäne entfernen** (häufigster Fall):
+   ```bash
+   xattr -dr com.apple.quarantine "/Applications/Daily App.app"
+   ```
+
+2. **Berechtigungen prüfen**:
+   ```bash
+   chmod +x "/Applications/Daily App.app/Contents/MacOS/Daily App"
+   ```
+
+3. **Gatekeeper temporär deaktivieren**:
+   ```bash
+   sudo spctl --master-disable
+   # Nach dem Starten der App wieder aktivieren:
+   sudo spctl --master-enable
+   ```
+
+4. **App aus dem Terminal starten** (für Debug-Output):
+   ```bash
+   "/Applications/Daily App.app/Contents/MacOS/Daily App"
+   ```
+
+### Globales Tastenkürzel funktioniert nicht
+- Gehe zu **Systemeinstellungen > Sicherheit & Datenschutz > Eingabehilfen**
+- Füge "Daily App" zur Liste der erlaubten Apps hinzu
+- Starte die App neu
+
+### App erscheint nicht in der Menüleiste
+- Überprüfe, ob die App läuft: `Activity Monitor` → "Daily App" suchen
+- Starte die App neu oder führe sie aus dem Terminal aus
 
 ## Installation & Entwicklung
 
