@@ -645,7 +645,6 @@ struct AppTaskRowView: View {
     
     private func dateString(from date: Date) -> String {
         let calendar = Calendar.current
-        let today = Date()
         
         if calendar.isDateInToday(date) {
             return "Heute"
