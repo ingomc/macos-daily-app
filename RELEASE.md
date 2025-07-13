@@ -125,7 +125,9 @@ make install
 
 ## Automatische Builds
 
-### GitHub Actions (zukünftig)
+### GitHub Actions CI/CD
+
+Die App ist für automatische Builds in GitHub Actions vorbereitet:
 
 ```yaml
 # .github/workflows/release.yml
@@ -138,13 +140,30 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Wichtig für Git History
+      
+      - name: Generate Version
+        run: make version
+      
       - name: Build Release
         run: make release
+      
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: .build/release/DailyApp
 ```
+
+### Fallback für CI/CD
+
+Die App verwendet intelligente Fallback-Mechanismen, wenn `AppVersion.swift` nicht verfügbar ist:
+
+- **Version**: v0.4.0-dev (statt Git Tag)
+- **Build**: CI Build + Datum (statt Build Number)  
+- **Git**: Unknown (statt Git Hash)
+
+Dies ermöglicht es, die App auch in CI/CD-Umgebungen zu kompilieren, wo die Version-Generation fehlschlägt.
 
 ## Versioning Schema
 
@@ -175,6 +194,13 @@ rm -f Sources/DailyApp/AppVersion.swift
 
 # Neue Version generieren
 make version
+```
+
+### CI/CD Build-Fehler
+```bash
+# Manuelle Version-Generation in CI
+make version || echo "Version generation failed, using fallback"
+swift build  # App verwendet automatisch Fallback-Versionen
 ```
 
 ### Uncommitted Changes
