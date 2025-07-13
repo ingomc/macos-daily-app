@@ -202,6 +202,8 @@ struct AppContentView: View {
             }
         }
         .frame(width: 400, height: 300)
+        .background(Color.clear)
+        .clipped()
         .onAppear {
             isTextFieldFocused = true
         }
@@ -363,6 +365,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hotKey: HotKey!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        print("Daily App startet...")
         // App nicht im Dock anzeigen
         NSApp.setActivationPolicy(.accessory)
         
@@ -386,8 +389,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if #available(macOS 15.0, *) {
             let contentView = AppContentView()
-            popover.contentViewController = NSHostingController(rootView: contentView)
+            let hostingController = NSHostingController(rootView: contentView)
+            
+            popover.contentViewController = hostingController
             popover.appearance = NSAppearance(named: .vibrantDark)
+            
+            // Entferne nur die äußeren Popover-Schatten und Hintergrund
+            hostingController.view.wantsLayer = true
+            hostingController.view.layer?.backgroundColor = NSColor.clear.cgColor
         } else {
             // Fallback für ältere Versionen
             let viewController = NSViewController()
@@ -464,6 +473,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if #available(macOS 15.0, *) {
             if let button = statusBarItem.button {
                 popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
+                
+                // Entferne den äußeren Popover-Rahmen nach dem Anzeigen
+                DispatchQueue.main.async {
+                    if let popoverWindow = self.popover.value(forKey: "popoverWindow") as? NSWindow {
+                        // Mache das Popover-Fenster transparent
+                        popoverWindow.backgroundColor = NSColor.clear
+                        popoverWindow.isOpaque = false
+                        popoverWindow.hasShadow = false
+                        
+                        // Entferne auch den ContentView-Hintergrund des Popovers
+                        if let contentView = popoverWindow.contentView {
+                            contentView.wantsLayer = true
+                            contentView.layer?.backgroundColor = NSColor.clear.cgColor
+                            contentView.layer?.borderWidth = 0
+                        }
+                        
+                        // Versuche, das Popover-Background komplett zu deaktivieren
+                        if let popoverView = popoverWindow.contentView?.subviews.first {
+                            popoverView.wantsLayer = true
+                            popoverView.layer?.backgroundColor = NSColor.clear.cgColor
+                            popoverView.layer?.borderWidth = 0
+                        }
+                    }
+                }
+                
                 eventMonitor?.start()
             }
         } else {
