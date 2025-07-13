@@ -8,6 +8,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
+# Generated files
+Sources/DailyApp/AppVersion.swift
+
 # App builds
 Daily App.app/
 *.dmg

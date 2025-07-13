@@ -3,13 +3,14 @@
 Eine native macOS Menu Bar Anwendung zum Tracken täglicher Aufgaben mit einem Spotlight-ähnlichen Interface und modernem Liquid Glass Design.
 
 ![Daily App Demo](https://img.shields.io/badge/macOS-Tahoe%2015.0+-blue?style=for-the-badge&logo=apple)
-![Swift](https://img.shields.io/badge/Swift-5.9+-orange?style=for-the-badge&logo=swift)
+![Swift](https://img.shields.io/badge/Swift-6.0+-orange?style=for-the-badge&logo=swift)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Latest-green?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-v0.3.0-brightgreen?style=for-the-badge)
 
 ## ✨ Features
 
-- **� Liquid Glass Design** - Modernster macOS Tahoe Look mit Transparenz-Effekten
-- **�🏠 Menu Bar Integration** - Lebt dezent in der macOS Menüleiste  
+- **🌟 Liquid Glass Design** - Modernster macOS Tahoe Look mit Transparenz-Effekten
+- **🏠 Menu Bar Integration** - Lebt dezent in der macOS Menüleiste  
 - **⚡ Spotlight-ähnliches Interface** - Schnelle Texteingabe mit vertrautem Design
 - **📝 Tägliche Aufgaben** - Erfasse kurze Notizen über deine täglichen Aktivitäten
 - **💾 Persistente Speicherung** - Daten werden automatisch gespeichert
@@ -17,6 +18,7 @@ Eine native macOS Menu Bar Anwendung zum Tracken täglicher Aufgaben mit einem S
 - **🖱️ Smart Menu System** - Linksklick = Toggle, Rechtsklick = Kontextmenü
 - **🎬 Smooth Animations** - Moderne Übergänge und Symbol-Effekte
 - **🌙 Dark Mode Ready** - Perfekte Integration in macOS Dark Mode
+- **🔄 Auto-Versioning** - Automatische Versionsnummern aus Git Tags
 
 ## 🔧 Installation
 
@@ -34,18 +36,75 @@ Eine native macOS Menu Bar Anwendung zum Tracken täglicher Aufgaben mit einem S
 > **⚠️ Hinweis zur Code-Signierung**: Da die App momentan nicht signiert ist, muss die Quarantäne-Kennzeichnung manuell entfernt werden. Dies ist ein einmaliger Vorgang nach der Installation.
 
 ### Manueller Build
+
+#### Voraussetzungen
+- macOS 15.0+ (Tahoe)
+- Xcode 16.0+ 
+- Swift 6.0+
+- Git (für automatische Versionierung)
+
+#### Build-Optionen
+
+**Option 1: Mit Makefile (empfohlen)**
 ```bash
 git clone https://github.com/[dein-username]/macos-daily-app.git
 cd macos-daily-app
-swift build -c release
-./.build/release/DailyApp
+
+# Vollständiger Build mit automatischer Versionierung
+make build
+
+# Debug-Build
+make debug
+
+# Release-Build für Distribution
+make release
+
+# App ausführen
+make run
+
+# Projektstruktur aufräumen
+make clean
 ```
+
+**Option 2: Swift Package Manager**
+```bash
+git clone https://github.com/[dein-username]/macos-daily-app.git
+cd macos-daily-app
+
+# Debug Build
+swift build
+
+# Release Build  
+swift build -c release
+
+# App ausführen
+.build/debug/DailyApp
+```
+
+#### Automatische Versionierung
+
+Die App verwendet Git Tags für automatische Versionsnummern:
+
+```bash
+# Neue Version taggen
+git tag v1.2.3
+git push origin v1.2.3
+
+# Build mit automatischer Version
+make build
+```
+
+Das Makefile generiert automatisch `Sources/DailyApp/AppVersion.swift` basierend auf dem aktuellen Git Tag.
+
+#### Release Process
+
+Für detaillierte Informationen zum Release-Prozess, siehe [`RELEASE.md`](./RELEASE.md).
 
 ## 📋 Systemanforderungen
 
 - **macOS Tahoe (15.0) oder neuer** für Liquid Glass Effekte
 - **Apple Silicon oder Intel Mac**
-- Für Entwicklung: **Xcode 15.0+** und **Swift 5.9+**
+- Für Entwicklung: **Xcode 16.0+** und **Swift 6.0+**
 
 ## 🛠️ Troubleshooting
 

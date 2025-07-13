@@ -1110,7 +1110,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.messageText = "Daily App"
         alert.informativeText = """
-        Version 0.2.0
+        Version \(AppVersion.fullVersion)
+        Build: \(AppVersion.buildDate)
+        Git: \(AppVersion.gitHash)
         
         Eine einfache App zum Tracken deiner täglichen Aufgaben.
         

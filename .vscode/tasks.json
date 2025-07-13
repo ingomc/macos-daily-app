@@ -4,7 +4,7 @@
 		{
 			"label": "Build Daily App",
 			"type": "shell",
-			"command": "swift",
+			"command": "make",
 			"args": [
 				"build"
 			],
@@ -12,6 +12,37 @@
 			"problemMatcher": [
 				"$swiftc"
 			],
+			"isBackground": false
+		},
+		{
+			"label": "Run Daily App",
+			"type": "shell",
+			"command": "make",
+			"args": [
+				"run"
+			],
+			"group": "build",
+			"isBackground": false,
+			"dependsOn": "Build Daily App"
+		},
+		{
+			"label": "Generate Version",
+			"type": "shell",
+			"command": "make",
+			"args": [
+				"version"
+			],
+			"group": "build",
+			"isBackground": false
+		},
+		{
+			"label": "Create Release",
+			"type": "shell",
+			"command": "make",
+			"args": [
+				"release"
+			],
+			"group": "build",
 			"isBackground": false
 		}
 	]
