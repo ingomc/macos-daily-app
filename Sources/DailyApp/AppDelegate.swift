@@ -897,7 +897,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.messageText = "Daily App"
         alert.informativeText = """
-        Version 1.0
+        Version 0.2.0
         
         Eine einfache App zum Tracken deiner täglichen Aufgaben.
         

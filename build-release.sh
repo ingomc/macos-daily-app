@@ -41,9 +41,9 @@ cat > "Daily App.app/Contents/Info.plist" << 'EOF'
     <key>CFBundleDisplayName</key>
     <string>Daily App</string>
     <key>CFBundleVersion</key>
-    <string>1.0</string>
+    <string>0.2</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>0.2.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSUIElement</key>
