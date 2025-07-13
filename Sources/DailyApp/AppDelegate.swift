@@ -1,6 +1,8 @@
 import Cocoa
 import SwiftUI
 import HotKey
+import CoreImage
+import CoreImage.CIFilterBuiltins
 
 // ContentView direkt hier definieren für bessere Kompatibilität
 struct AppContentView: View {
@@ -10,10 +12,12 @@ struct AppContentView: View {
     @State private var hoveredTask: UUID? = nil
     @State private var animatingTaskId: UUID? = nil
     @State private var showExtendedView = false
+    @State private var liquidGlassOpacity: Double = 0.0
     
     var body: some View {
         ZStack {
             AppBackgroundView()
+                .opacity(0.7 + liquidGlassOpacity * 0.1) // Mehr Transparenz
             
             VStack(spacing: 16) {
                 AppHeaderView(
@@ -48,6 +52,11 @@ struct AppContentView: View {
         .clipped()
         .onAppear {
             isTextFieldFocused = true
+            
+            // Subtile Liquid Glass Atmung-Animation
+            withAnimation(.easeInOut(duration: 6.0).repeatForever(autoreverses: true)) {
+                liquidGlassOpacity = 0.15
+            }
         }
     }
     
@@ -77,53 +86,148 @@ struct AppContentView: View {
     }
 }
 
-// Separater Background View
+// Separater Background View mit Liquid Glass Effekt
 struct AppBackgroundView: View {
+    @State private var glassIntensity: Double = 0.0
+    
     var body: some View {
         if #available(macOS 15.0, *) {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .opacity(0.7)
-                .overlay {
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.08),
-                            Color.blue.opacity(0.04),
-                            Color.purple.opacity(0.03),
-                            Color.clear
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: .black.opacity(0.4), radius: 25, x: 0, y: 10)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [
-                                    .white.opacity(0.3),
-                                    .white.opacity(0.08),
-                                    .clear
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1.5
-                        )
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18)
-                        .strokeBorder(.white.opacity(0.1), lineWidth: 0.5)
-                        .padding(1)
+            LiquidGlassBackground(glassIntensity: glassIntensity)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 4.0).repeatForever(autoreverses: true)) {
+                        glassIntensity = 0.3
+                    }
                 }
         } else {
-            Rectangle()
-                .fill(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(radius: 10)
+            FallbackBackground()
         }
+    }
+}
+
+// Liquid Glass Background für macOS 15+
+@available(macOS 15.0, *)
+struct LiquidGlassBackground: View {
+    let glassIntensity: Double
+    
+    var body: some View {
+        Rectangle()
+            .fill(.clear)
+            .background {
+                LiquidGlassLayer(glassIntensity: glassIntensity)
+            }
+    }
+}
+
+// Liquid Glass Material Layer
+@available(macOS 15.0, *)
+struct LiquidGlassLayer: View {
+    let glassIntensity: Double
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 24)
+            .fill(.clear) // Komplett transparent als Basis
+            .background {
+                // Sehr dünne Glas-Schicht
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.3) // Viel transparenter
+            }
+            .overlay {
+                RefractionOverlay()
+            }
+            .overlay {
+                LiquidFlowOverlay(glassIntensity: glassIntensity)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10) // Weniger Schatten
+            .shadow(color: .blue.opacity(0.08), radius: 10, x: 0, y: 3)
+            .overlay {
+                HighlightBorder()
+            }
+            .overlay {
+                InnerGlow()
+            }
+    }
+}
+
+// Refraktions-Effekt Overlay
+@available(macOS 15.0, *)
+struct RefractionOverlay: View {
+    var body: some View {
+        LinearGradient(
+            colors: [
+                Color.white.opacity(0.05), // Viel transparenter
+                Color.cyan.opacity(0.03),
+                Color.blue.opacity(0.02),
+                Color.purple.opacity(0.01),
+                Color.clear
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .blendMode(.screen)
+    }
+}
+
+// Liquid Flow Animation Overlay
+@available(macOS 15.0, *)
+struct LiquidFlowOverlay: View {
+    let glassIntensity: Double
+    
+    var body: some View {
+        LinearGradient(
+            colors: [
+                Color.white.opacity(0.03 + glassIntensity * 0.02), // Transparenter
+                Color.clear,
+                Color.blue.opacity(0.02 + glassIntensity * 0.01)
+            ],
+            startPoint: UnitPoint(x: -0.3 + glassIntensity, y: -0.3 + glassIntensity),
+            endPoint: UnitPoint(x: 1.3 + glassIntensity, y: 1.3 + glassIntensity)
+        )
+        .blendMode(.overlay)
+    }
+}
+
+// Hochglanz Border
+@available(macOS 15.0, *)
+struct HighlightBorder: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 24)
+            .strokeBorder(
+                LinearGradient(
+                    colors: [
+                        .white.opacity(0.2), // Transparentere Borders
+                        .white.opacity(0.08),
+                        .cyan.opacity(0.05),
+                        .clear,
+                        .clear,
+                        .white.opacity(0.04)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                lineWidth: 1.5 // Dünnere Border
+            )
+    }
+}
+
+// Innerer Glasglanz
+@available(macOS 15.0, *)
+struct InnerGlow: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 22)
+            .strokeBorder(.white.opacity(0.03), lineWidth: 0.5) // Sehr transparent
+            .padding(1.5)
+    }
+}
+
+// Fallback für ältere macOS Versionen
+struct FallbackBackground: View {
+    var body: some View {
+        Rectangle()
+            .fill(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 10)
     }
 }
 
@@ -193,12 +297,7 @@ struct AppHeaderView: View {
                 .padding(.vertical, 4)
                 .background {
                     if #available(macOS 15.0, *) {
-                        Capsule()
-                            .fill(.regularMaterial)
-                            .overlay {
-                                Capsule()
-                                    .strokeBorder(.white.opacity(0.1), lineWidth: 0.5)
-                            }
+                        LiquidGlassDateBadge()
                     } else {
                         Capsule()
                             .fill(Color(.controlBackgroundColor))
@@ -258,21 +357,33 @@ struct AppInputFieldView: View {
     }
 }
 
-// Separater TextField Background
+// Separater TextField Background mit Liquid Glass Effekt
 struct AppTextFieldBackground: View {
     let isTextFieldFocused: Bool
     
     var body: some View {
         if #available(macOS 15.0, *) {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.regularMaterial)
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.clear) // Transparent als Basis
+                .background {
+                    // Sehr dünne Material-Schicht
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.4) // Sehr transparent
+                }
                 .overlay {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 14)
                         .strokeBorder(
                             focusedBorderGradient,
-                            lineWidth: isTextFieldFocused ? 1.5 : 0.5
+                            lineWidth: isTextFieldFocused ? 1.5 : 0.6
                         )
                         .animation(.easeInOut(duration: 0.3), value: isTextFieldFocused)
+                }
+                .overlay {
+                    // Innerer Glasglanz für Tiefe
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(.white.opacity(0.04), lineWidth: 0.4)
+                        .padding(1.2)
                 }
         } else {
             RoundedRectangle(cornerRadius: 8)
@@ -285,14 +396,19 @@ struct AppTextFieldBackground: View {
     private var focusedBorderGradient: AnyShapeStyle {
         if isTextFieldFocused {
             return AnyShapeStyle(.angularGradient(
-                colors: [.blue, .purple, .cyan, .blue],
+                colors: [
+                    .blue.opacity(0.8), 
+                    .cyan.opacity(0.6), 
+                    .purple.opacity(0.7), 
+                    .blue.opacity(0.8)
+                ],
                 center: .center,
                 startAngle: .degrees(0),
                 endAngle: .degrees(360)
             ))
         } else {
             return AnyShapeStyle(.linearGradient(
-                colors: [.white.opacity(0.1), .clear],
+                colors: [.white.opacity(0.2), .white.opacity(0.05), .clear],
                 startPoint: .top,
                 endPoint: .bottom
             ))
@@ -617,26 +733,103 @@ struct AppTaskRowView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, compact ? 6 : 10)
         .background {
-            if #available(macOS 15.0, *) {
-                RoundedRectangle(cornerRadius: compact ? 8 : 10)
-                    .fill(.regularMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: compact ? 8 : 10)
-                            .strokeBorder(
-                                .white.opacity(isHovered ? 0.15 : (isAnimating ? 0.2 : 0.05)),
-                                lineWidth: isAnimating ? 1.0 : 0.5
-                            )
-                    }
-            } else {
-                RoundedRectangle(cornerRadius: compact ? 6 : 8)
-                    .fill(Color(.controlBackgroundColor).opacity(isHovered ? 0.8 : 0.6))
-            }
+            AppTaskRowBackground(
+                isHovered: isHovered,
+                isAnimating: isAnimating,
+                compact: compact
+            )
         }
         .scaleEffect(isHovered ? 1.02 : (isAnimating ? 1.05 : 1.0))
         .animation(.easeInOut(duration: 0.2), value: isHovered)
         .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isAnimating)
     }
+}
+
+// Separater Task Row Background mit Liquid Glass Effekt
+struct AppTaskRowBackground: View {
+    let isHovered: Bool
+    let isAnimating: Bool
+    let compact: Bool
     
+    var body: some View {
+        if #available(macOS 15.0, *) {
+            RoundedRectangle(cornerRadius: compact ? 10 : 12)
+                .fill(.clear) // Transparent als Basis
+                .background {
+                    // Sehr dünne Material-Schicht
+                    RoundedRectangle(cornerRadius: compact ? 10 : 12)
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.3) // Sehr transparent
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: compact ? 10 : 12)
+                        .strokeBorder(
+                            liquidGlassBorder,
+                            lineWidth: isAnimating ? 1.2 : (isHovered ? 0.8 : 0.4)
+                        )
+                }
+                .overlay {
+                    // Innerer Glasglanz
+                    RoundedRectangle(cornerRadius: compact ? 8 : 10)
+                        .strokeBorder(.white.opacity(0.03), lineWidth: 0.3)
+                        .padding(1)
+                }
+        } else {
+            RoundedRectangle(cornerRadius: compact ? 6 : 8)
+                .fill(Color(.controlBackgroundColor).opacity(isHovered ? 0.8 : 0.6))
+        }
+    }
+    
+    @available(macOS 15.0, *)
+    private var liquidGlassBorder: AnyShapeStyle {
+        if isAnimating {
+            return AnyShapeStyle(.angularGradient(
+                colors: [
+                    .blue.opacity(0.6),
+                    .cyan.opacity(0.5),
+                    .mint.opacity(0.4),
+                    .blue.opacity(0.6)
+                ],
+                center: .center,
+                startAngle: .degrees(0),
+                endAngle: .degrees(360)
+            ))
+        } else if isHovered {
+            return AnyShapeStyle(.linearGradient(
+                colors: [.white.opacity(0.25), .cyan.opacity(0.15), .clear],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ))
+        } else {
+            return AnyShapeStyle(.linearGradient(
+                colors: [.white.opacity(0.12), .white.opacity(0.04), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            ))
+        }
+    }
+}
+
+// Liquid Glass Date Badge
+@available(macOS 15.0, *)
+struct LiquidGlassDateBadge: View {
+    var body: some View {
+        Capsule()
+            .fill(.clear)
+            .background {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.3) // Sehr transparent
+            }
+            .overlay {
+                Capsule()
+                    .strokeBorder(.white.opacity(0.06), lineWidth: 0.4)
+            }
+    }
+}
+
+// Hilfsfunktionen für AppTaskRowView 
+extension AppTaskRowView {
     private func timeString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -847,26 +1040,61 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let button = statusBarItem.button {
                 popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
                 
-                // Entferne den äußeren Popover-Rahmen nach dem Anzeigen
+                // Konfiguriere echten Liquid Glass Effekt mit macOS Tahoe API
                 DispatchQueue.main.async {
                     if let popoverWindow = self.popover.value(forKey: "popoverWindow") as? NSWindow {
-                        // Mache das Popover-Fenster transparent
+                        // Aktiviere Liquid Glass Window-Eigenschaften
                         popoverWindow.backgroundColor = NSColor.clear
                         popoverWindow.isOpaque = false
                         popoverWindow.hasShadow = false
                         
-                        // Entferne auch den ContentView-Hintergrund des Popovers
-                        if let contentView = popoverWindow.contentView {
-                            contentView.wantsLayer = true
-                            contentView.layer?.backgroundColor = NSColor.clear.cgColor
-                            contentView.layer?.borderWidth = 0
-                        }
-                        
-                        // Versuche, das Popover-Background komplett zu deaktivieren
-                        if let popoverView = popoverWindow.contentView?.subviews.first {
-                            popoverView.wantsLayer = true
-                            popoverView.layer?.backgroundColor = NSColor.clear.cgColor
-                            popoverView.layer?.borderWidth = 0
+                        // Neue macOS Tahoe Liquid Glass Features
+                        if #available(macOS 15.0, *) {
+                            // Aktiviere Liquid Glass Material für das Fenster
+                            popoverWindow.titlebarAppearsTransparent = true
+                            popoverWindow.styleMask.insert(.fullSizeContentView)
+                            
+                            // Aktiviere Hardware-beschleunigte Transparenz
+                            popoverWindow.isMovableByWindowBackground = false
+                            popoverWindow.level = .popUpMenu
+                            
+                            // Liquid Glass Layer-Konfiguration
+                            if let contentView = popoverWindow.contentView {
+                                contentView.wantsLayer = true
+                                contentView.layer?.backgroundColor = NSColor.clear.cgColor
+                                contentView.layer?.borderWidth = 0
+                                
+                                // Aktiviere Metal-basierte Liquid Glass Rendering
+                                contentView.layer?.isOpaque = false
+                                contentView.layer?.allowsEdgeAntialiasing = true
+                                contentView.layer?.masksToBounds = false
+                                
+                                // Liquid Glass Blur und Refraktion
+                                if let layer = contentView.layer {
+                                    layer.compositingFilter = "liquidGlassBlur"
+                                    layer.backgroundFilters = [CIFilter(name: "CIGaussianBlur")!]
+                                    
+                                    // Dynamische Refraktion für echten Glaseffekt
+                                    let refractionFilter = CIFilter(name: "CIGlassDistortion")
+                                    refractionFilter?.setValue(0.2, forKey: "inputScale")
+                                    layer.filters = [refractionFilter].compactMap { $0 }
+                                }
+                            }
+                            
+                            // Entferne Popover-Standard-Background komplett
+                            if let popoverView = popoverWindow.contentView?.subviews.first {
+                                popoverView.wantsLayer = true
+                                popoverView.layer?.backgroundColor = NSColor.clear.cgColor
+                                popoverView.layer?.borderWidth = 0
+                                popoverView.layer?.isOpaque = false
+                                
+                                // Aktiviere durchscheinende Eigenschaften
+                                popoverView.alphaValue = 1.0
+                                if let layer = popoverView.layer {
+                                    layer.allowsEdgeAntialiasing = true
+                                    layer.shouldRasterize = false
+                                }
+                            }
                         }
                     }
                 }
@@ -874,7 +1102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 eventMonitor?.start()
             }
         } else {
-            print("Diese App benötigt macOS Tahoe (15.0) oder neuer")
+            print("Diese App benötigt macOS Tahoe (15.0) oder neuer für Liquid Glass Effekte")
         }
     }
     
