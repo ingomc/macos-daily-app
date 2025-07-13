@@ -1,3 +1,4 @@
+# Xcode & Swift
 .DS_Store
 /.build
 /Packages
@@ -6,3 +7,16 @@ DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
+
+# App builds
+Daily App.app/
+*.dmg
+*.zip
+
+# Temporary files
+dmg-temp/
+build-temp/
+
+# IDE
+.vscode/
+.idea/

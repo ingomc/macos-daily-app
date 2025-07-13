@@ -1,22 +1,45 @@
-# macOS Daily App
+# Daily App - macOS Liquid Glass Edition
 
-Eine native macOS Menu Bar Anwendung zum Tracken täglicher Aufgaben mit einem Spotlight-ähnlichen Interface.
+Eine native macOS Menu Bar Anwendung zum Tracken täglicher Aufgaben mit einem Spotlight-ähnlichen Interface und modernem Liquid Glass Design.
 
-## Features
+![Daily App Demo](https://img.shields.io/badge/macOS-Tahoe%2015.0+-blue?style=for-the-badge&logo=apple)
+![Swift](https://img.shields.io/badge/Swift-5.9+-orange?style=for-the-badge&logo=swift)
+![SwiftUI](https://img.shields.io/badge/SwiftUI-Latest-green?style=for-the-badge)
 
-- **🏠 Menu Bar Integration** - Lebt dezent in der macOS Menüleiste
+## ✨ Features
+
+- **� Liquid Glass Design** - Modernster macOS Tahoe Look mit Transparenz-Effekten
+- **�🏠 Menu Bar Integration** - Lebt dezent in der macOS Menüleiste  
 - **⚡ Spotlight-ähnliches Interface** - Schnelle Texteingabe mit vertrautem Design
 - **📝 Tägliche Aufgaben** - Erfasse kurze Notizen über deine täglichen Aktivitäten
-- **💾 Persistente Speicherung** - Daten werden in UserDefaults gespeichert
-- **🎨 Moderne SwiftUI UI** - Schönes, natives macOS Design mit Animationen
-- **⌨️ Globales Tastenkürzel** - Cmd+Shift+D funktioniert systemweit
+- **💾 Persistente Speicherung** - Daten werden automatisch gespeichert
+- **⌨️ Globales Tastenkürzel** - `Cmd+Shift+D` funktioniert systemweit
 - **🖱️ Smart Menu System** - Linksklick = Toggle, Rechtsklick = Kontextmenü
-- **🎬 Smooth Animations** - Moderne Übergänge beim Hinzufügen/Entfernen
+- **🎬 Smooth Animations** - Moderne Übergänge und Symbol-Effekte
+- **🌙 Dark Mode Ready** - Perfekte Integration in macOS Dark Mode
 
-## Systemanforderungen
+## 🔧 Installation
 
-- macOS 14.0 oder neuer (Sonoma/Sequoia)
-- Xcode 15.0 oder neuer (für Entwicklung)
+### Automatischer Download (Empfohlen)
+1. Gehe zu [Releases](../../releases)
+2. Lade die neueste `Daily-App.dmg` herunter
+3. Öffne das DMG und ziehe die App in den Applications Ordner
+4. Starte die App - das Icon erscheint in der Menüleiste
+5. Drücke `Cmd+Shift+D` zum ersten Mal öffnen
+
+### Manueller Build
+```bash
+git clone https://github.com/[dein-username]/macos-daily-app.git
+cd macos-daily-app
+swift build -c release
+./.build/release/DailyApp
+```
+
+## 📋 Systemanforderungen
+
+- **macOS Tahoe (15.0) oder neuer** für Liquid Glass Effekte
+- **Apple Silicon oder Intel Mac**
+- Für Entwicklung: **Xcode 15.0+** und **Swift 5.9+**
 
 ## Installation & Entwicklung
 
