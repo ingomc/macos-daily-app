@@ -11,7 +11,6 @@ struct AppContentView: View {
     @FocusState private var isTextFieldFocused: Bool
     @State private var hoveredTask: UUID? = nil
     @State private var animatingTaskId: UUID? = nil
-    @State private var showExtendedView = false
     @State private var liquidGlassOpacity: Double = 0.0
     
     var body: some View {
@@ -19,35 +18,25 @@ struct AppContentView: View {
             AppBackgroundView()
                 .opacity(0.1 + liquidGlassOpacity * 0.02) // Noch transparenter
             
-            VStack(spacing: 16) {
-                AppHeaderView(
-                    showExtendedView: $showExtendedView,
-                    taskCount: taskManager.tasks.count
-                )
+            VStack(spacing: 20) {
+                AppHeaderView(taskCount: taskManager.tasks.count)
+                
                 AppInputFieldView(
                     newTaskText: $newTaskText,
                     isTextFieldFocused: $isTextFieldFocused,
                     onAddTask: addTask
                 )
                 
-                if showExtendedView {
-                    AppExtendedTaskListView(
-                        taskManager: taskManager,
-                        hoveredTask: $hoveredTask,
-                        animatingTaskId: $animatingTaskId
-                    )
-                } else {
-                    AppTaskListView(
-                        taskManager: taskManager,
-                        hoveredTask: $hoveredTask,
-                        animatingTaskId: $animatingTaskId
-                    )
-                }
+                AppExtendedTaskListView(
+                    taskManager: taskManager,
+                    hoveredTask: $hoveredTask,
+                    animatingTaskId: $animatingTaskId
+                )
                 
-                Spacer(minLength: 20)
+                Spacer(minLength: 10) // Weniger Spacer für mehr ScrollView-Platz
             }
         }
-        .frame(width: 400, height: showExtendedView ? 500 : 300)
+        .frame(width: 400, height: 380) // Reduzierte Höhe für bessere Bildschirm-Positionierung
         .background(Color.clear)
         .clipped()
         .onAppear {
@@ -118,58 +107,139 @@ struct LiquidGlassBackground: View {
     }
 }
 
-// Liquid Glass Material Layer
+// Liquid Glass Material Layer - Aufgeteilt für bessere Kompilierung
 @available(macOS 15.0, *)
 struct LiquidGlassLayer: View {
     let glassIntensity: Double
     
     var body: some View {
+        LiquidGlassBase()
+            .overlay {
+                LiquidGlassOverlays(glassIntensity: glassIntensity)
+            }
+            .overlay {
+                LiquidGlassBorders()
+            }
+    }
+}
+
+@available(macOS 15.0, *)
+struct LiquidGlassBase: View {
+    var body: some View {
         RoundedRectangle(cornerRadius: 24)
             .fill(.clear) // Komplett transparent als Basis
             .background {
-                // Klares Glas - kein Material mehr
                 RoundedRectangle(cornerRadius: 24)
                     .fill(.clear)
                     .background {
-                        // Nur minimale Glasreflexion
                         RoundedRectangle(cornerRadius: 24)
                             .fill(Color.white.opacity(0.08))
                     }
             }
-            .overlay {
-                RefractionOverlay()
-            }
-            .overlay {
-                LiquidFlowOverlay(glassIntensity: glassIntensity)
-            }
             .clipShape(RoundedRectangle(cornerRadius: 24))
-            .shadow(color: .black.opacity(0.1), radius: 15, x: 0, y: 8) // Minimaler Schatten
+            .shadow(color: .black.opacity(0.1), radius: 15, x: 0, y: 8)
             .shadow(color: .blue.opacity(0.04), radius: 8, x: 0, y: 2)
-            .overlay {
-                HighlightBorder()
-            }
-            .overlay {
-                InnerGlow()
-            }
-            .overlay {
-                // Zusätzliche Hauptfenster-Reflexionen
-                RoundedRectangle(cornerRadius: 20)
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [
-                                .white.opacity(0.2),
-                                .clear,
-                                .cyan.opacity(0.1),
-                                .clear,
-                                .white.opacity(0.15)
-                            ],
-                            startPoint: .topTrailing,
-                            endPoint: .bottomLeading
-                        ),
-                        lineWidth: 0.8
-                    )
-                    .padding(3)
-            }
+    }
+}
+
+@available(macOS 15.0, *)
+struct LiquidGlassOverlays: View {
+    let glassIntensity: Double
+    
+    var body: some View {
+        Group {
+            RefractionOverlay()
+            LiquidFlowOverlay(glassIntensity: glassIntensity)
+            HighlightBorder()
+            InnerGlow()
+        }
+    }
+}
+
+@available(macOS 15.0, *)
+struct LiquidGlassBorders: View {
+    var body: some View {
+        Group {
+            // Erste Reflexions-Schicht
+            MainWindowReflection1()
+            
+            // Zweite Reflexions-Schicht
+            MainWindowReflection2()
+            
+            // Dritte animierte Schicht
+            MainWindowReflection3()
+        }
+    }
+}
+
+@available(macOS 15.0, *)
+struct MainWindowReflection1: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 20)
+            .strokeBorder(
+                LinearGradient(
+                    colors: [
+                        .white.opacity(0.6),
+                        .cyan.opacity(0.3),
+                        .white.opacity(0.4),
+                        .blue.opacity(0.2),
+                        .white.opacity(0.5),
+                        .purple.opacity(0.15),
+                        .white.opacity(0.45)
+                    ],
+                    startPoint: .topTrailing,
+                    endPoint: .bottomLeading
+                ),
+                lineWidth: 1.2
+            )
+            .padding(2)
+    }
+}
+
+@available(macOS 15.0, *)
+struct MainWindowReflection2: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 18)
+            .strokeBorder(
+                LinearGradient(
+                    colors: [
+                        .white.opacity(0.35),
+                        .clear,
+                        .mint.opacity(0.2),
+                        .clear,
+                        .white.opacity(0.25)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                lineWidth: 0.8
+            )
+            .padding(4)
+    }
+}
+
+@available(macOS 15.0, *)
+struct MainWindowReflection3: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 22)
+            .strokeBorder(
+                AngularGradient(
+                    colors: [
+                        .white.opacity(0.3),
+                        .cyan.opacity(0.15),
+                        .blue.opacity(0.1),
+                        .purple.opacity(0.08),
+                        .white.opacity(0.25),
+                        .mint.opacity(0.12),
+                        .white.opacity(0.3)
+                    ],
+                    center: .center,
+                    startAngle: .degrees(0),
+                    endAngle: .degrees(360)
+                ),
+                lineWidth: 0.6
+            )
+            .padding(1)
     }
 }
 
@@ -211,7 +281,7 @@ struct LiquidFlowOverlay: View {
     }
 }
 
-// Hochglanz Border
+// Hochglanz Border - VERSTÄRKT
 @available(macOS 15.0, *)
 struct HighlightBorder: View {
     var body: some View {
@@ -219,28 +289,36 @@ struct HighlightBorder: View {
             .strokeBorder(
                 LinearGradient(
                     colors: [
-                        .white.opacity(0.4), // Deutlich stärkere Glasreflexionen
-                        .white.opacity(0.3),
-                        .cyan.opacity(0.15),
-                        .white.opacity(0.25),
-                        .purple.opacity(0.08),
-                        .white.opacity(0.35)
+                        .white.opacity(0.65), // Noch stärkere Glasreflexionen
+                        .white.opacity(0.5),
+                        .cyan.opacity(0.25),
+                        .white.opacity(0.45),
+                        .blue.opacity(0.15),
+                        .purple.opacity(0.12),
+                        .white.opacity(0.55),
+                        .mint.opacity(0.18)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                lineWidth: 1.8 // Noch dickerer Rahmen für prominente Reflexionen
+                lineWidth: 2.2 // Noch dickerer Rahmen für maximale Prominenz
             )
     }
 }
 
-// Innerer Glasglanz
+// Innerer Glasglanz - VERSTÄRKT
 @available(macOS 15.0, *)
 struct InnerGlow: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 22)
-            .strokeBorder(.white.opacity(0.15), lineWidth: 1.0) // Deutlich sichtbare innere Reflexion
+            .strokeBorder(.white.opacity(0.25), lineWidth: 1.5) // Deutlich sichtbare innere Reflexion
             .padding(1.5)
+            .overlay {
+                // Zusätzlicher innerer Glanz für mehr Tiefe
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(.cyan.opacity(0.15), lineWidth: 0.8)
+                    .padding(3)
+            }
     }
 }
 
@@ -256,7 +334,6 @@ struct FallbackBackground: View {
 
 // Separater Header View  
 struct AppHeaderView: View {
-    @Binding var showExtendedView: Bool
     let taskCount: Int
     
     var body: some View {
@@ -278,13 +355,13 @@ struct AppHeaderView: View {
                     .foregroundColor(.blue)
             }
             
-            VStack(alignment: .leading, spacing: showExtendedView ? 2 : 0) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("Daily Tasks")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 
-                if showExtendedView && taskCount > 0 {
+                if taskCount > 0 {
                     Text("\(taskCount) \(taskCount == 1 ? "Aufgabe" : "Aufgaben")")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -292,26 +369,6 @@ struct AppHeaderView: View {
             }
             
             Spacer()
-            
-            // Toggle Button für Extended View
-            Button(action: {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                    showExtendedView.toggle()
-                }
-            }) {
-                if #available(macOS 15.0, *) {
-                    Image(systemName: showExtendedView ? "list.bullet.rectangle" : "list.bullet")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .symbolEffect(.bounce, value: showExtendedView)
-                } else {
-                    Image(systemName: showExtendedView ? "list.bullet.rectangle" : "list.bullet")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .buttonStyle(.plain)
-            .help(showExtendedView ? "Kompakte Ansicht" : "Erweiterte Ansicht")
             
             Text(currentDateString())
                 .font(.caption)
@@ -345,36 +402,18 @@ struct AppInputFieldView: View {
     let onAddTask: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            if #available(macOS 15.0, *) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.green, .mint],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .symbolEffect(.bounce, value: newTaskText.isEmpty)
-            } else {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(.green)
-            }
-            
-            ZStack {
-                TextField("Was hast du heute gemacht?", text: $newTaskText)
-                    .textFieldStyle(.plain)
-                    .font(.body)
-                    .focused($isTextFieldFocused)
-                    .onSubmit(onAddTask)
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                    .background {
-                        AppTextFieldBackground(isTextFieldFocused: isTextFieldFocused)
-                    }
-            }
+        VStack(spacing: 8) {
+            TextField("Was hast du heute gemacht?", text: $newTaskText)
+                .textFieldStyle(.plain)
+                .font(.title3) // Größere Schrift
+                .fontWeight(.medium)
+                .focused($isTextFieldFocused)
+                .onSubmit(onAddTask)
+                .padding(.vertical, 16) // Mehr Padding
+                .padding(.horizontal, 20)
+                .background {
+                    AppTextFieldBackground(isTextFieldFocused: isTextFieldFocused)
+                }
         }
         .padding(.horizontal, 20)
     }
@@ -386,31 +425,31 @@ struct AppTextFieldBackground: View {
     
     var body: some View {
         if #available(macOS 15.0, *) {
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: 16) // Größerer Radius
                 .fill(.clear) // Transparent als Basis
                 .background {
                     // Klares Glas ohne Material
-                    RoundedRectangle(cornerRadius: 14)
+                    RoundedRectangle(cornerRadius: 16)
                         .fill(.clear)
                         .background {
                             // Nur minimale Glasschicht
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Color.white.opacity(0.06))
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.white.opacity(0.08)) // Etwas sichtbarer
                         }
                 }
                 .overlay {
-                    RoundedRectangle(cornerRadius: 14)
+                    RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(
                             focusedBorderGradient,
-                            lineWidth: isTextFieldFocused ? 1.5 : 0.6
+                            lineWidth: isTextFieldFocused ? 2.0 : 1.0 // Dickerer Border
                         )
                         .animation(.easeInOut(duration: 0.3), value: isTextFieldFocused)
                 }
                 .overlay {
                     // Innerer Glasglanz für Tiefe
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(.white.opacity(0.06), lineWidth: 0.4) // Sichtbare Reflexion
-                        .padding(1.2)
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(.white.opacity(0.08), lineWidth: 0.6) // Sichtbarer
+                        .padding(1.5)
                 }
         } else {
             RoundedRectangle(cornerRadius: 8)
@@ -440,83 +479,6 @@ struct AppTextFieldBackground: View {
                 endPoint: .bottom
             ))
         }
-    }
-}
-
-// Separater Task List View
-struct AppTaskListView: View {
-    @ObservedObject var taskManager: AppTaskManager
-    @Binding var hoveredTask: UUID?
-    @Binding var animatingTaskId: UUID?
-    
-    private var limitedTasks: [AppTask] {
-        Array(taskManager.tasks.prefix(10))
-    }
-    
-    private let compact = true
-    
-    var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 6) {
-                ForEach(limitedTasks) { task in
-                    AppTaskRowView(
-                        task: task,
-                        isHovered: hoveredTask == task.id,
-                        isAnimating: animatingTaskId == task.id,
-                        compact: true,
-                        onDelete: {
-                            withAnimation(.spring(response: 0.3)) {
-                                taskManager.deleteTask(task)
-                            }
-                        }
-                    )
-                    .onHover { isHovering in
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            hoveredTask = isHovering ? task.id : nil
-                        }
-                    }
-                    // Fly-in Animation für neue Tasks
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .top).combined(with: .opacity).combined(with: .scale(scale: 0.8)),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                }
-                
-                if taskManager.tasks.count > 10 {
-                    Text("... und \(taskManager.tasks.count - 10) weitere")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.vertical, 8)
-                }
-                
-                if taskManager.tasks.isEmpty {
-                    VStack(spacing: 8) {
-                        if #available(macOS 15.0, *) {
-                            Image(systemName: "list.bullet.clipboard")
-                                .font(.system(size: 24))
-                                .foregroundStyle(.secondary)
-                                .symbolEffect(.pulse.wholeSymbol, options: .repeating)
-                        } else {
-                            Image(systemName: "list.bullet.clipboard")
-                                .font(.system(size: 24))
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Text("Noch keine Aufgaben heute")
-                            .font(.callout)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Füge deine erste Aufgabe hinzu!")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 16)
-                    .transition(.opacity.combined(with: .scale))
-                }
-            }
-            .padding(.horizontal, 20)
-        }
-        .frame(maxHeight: compact ? 120 : 150)
     }
 }
 
@@ -653,7 +615,7 @@ struct AppExtendedTaskListView: View {
                 }
             }
         }
-        .frame(maxHeight: 350)
+        .frame(maxHeight: 250) // Vergrößerte ScrollView für mehr Platz bis zum Fensterrand
     }
 }
 
@@ -982,7 +944,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Popover konfigurieren mit Liquid Glass
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 420, height: 320)
+        popover.contentSize = NSSize(width: 400, height: 380) // Kompakte Standardgröße
         popover.behavior = .transient
         popover.animates = true
         
@@ -1071,7 +1033,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showPopover(sender: Any?) {
         if #available(macOS 15.0, *) {
             if let button = statusBarItem.button {
-                popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
+                // Bildschirm-Grenzen prüfen für bessere Positionierung
+                let screenRect = NSScreen.main?.visibleFrame ?? NSRect.zero
+                let buttonRect = button.convert(button.bounds, to: nil)
+                let windowFrame = button.window?.convertToScreen(buttonRect) ?? NSRect.zero
+                
+                // Kompakte Popover-Größe für bessere Bildschirm-Anpassung
+                let contentHeight: CGFloat = 380
+                let maxHeight = screenRect.height - 120 // Mehr Abstand vom Bildschirmrand
+                let adjustedHeight = min(contentHeight, maxHeight)
+                
+                popover.contentSize = NSSize(width: 400, height: adjustedHeight)
+                
+                // Smart positioning - prüfe verfügbaren Platz
+                let spaceBelow = windowFrame.minY - screenRect.minY
+                let spaceAbove = screenRect.maxY - windowFrame.maxY
+                
+                // Wähle die Position mit mehr Platz
+                let preferredEdge: NSRectEdge
+                if spaceBelow >= adjustedHeight + 20 {
+                    preferredEdge = .minY // Nach unten öffnen
+                } else if spaceAbove >= adjustedHeight + 20 {
+                    preferredEdge = .maxY // Nach oben öffnen
+                } else {
+                    // Falls beides knapp ist, nehme die größere Seite
+                    preferredEdge = spaceBelow > spaceAbove ? .minY : .maxY
+                }
+                
+                popover.show(relativeTo: button.bounds, of: button, preferredEdge: preferredEdge)
                 
                 // Konfiguriere echten Liquid Glass Effekt mit macOS Tahoe API
                 DispatchQueue.main.async {
