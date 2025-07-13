@@ -953,9 +953,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let hostingController = NSHostingController(rootView: contentView)
             
             popover.contentViewController = hostingController
-            popover.appearance = NSAppearance(named: .vibrantDark)
+            // Komplett transparentes Popover - kein eigenes Styling
+            popover.appearance = nil
             
-            // Entferne nur die äußeren Popover-Schatten und Hintergrund
+            // Minimale View-Anpassungen für bessere Glaseffekt-Integration
             hostingController.view.wantsLayer = true
             hostingController.view.layer?.backgroundColor = NSColor.clear.cgColor
         } else {
@@ -1062,60 +1063,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 
                 popover.show(relativeTo: button.bounds, of: button, preferredEdge: preferredEdge)
                 
-                // Konfiguriere echten Liquid Glass Effekt mit macOS Tahoe API
+                // Komplett transparentes Popover - nur interne Glaseffekte sichtbar
                 DispatchQueue.main.async {
                     if let popoverWindow = self.popover.value(forKey: "popoverWindow") as? NSWindow {
-                        // Aktiviere Liquid Glass Window-Eigenschaften
+                        // Komplett transparent - kein Popover-Styling
                         popoverWindow.backgroundColor = NSColor.clear
                         popoverWindow.isOpaque = false
-                        popoverWindow.hasShadow = false
+                        popoverWindow.hasShadow = false // Kein Schatten
                         
-                        // Neue macOS Tahoe Liquid Glass Features
-                        if #available(macOS 15.0, *) {
-                            // Aktiviere Liquid Glass Material für das Fenster
-                            popoverWindow.titlebarAppearsTransparent = true
-                            popoverWindow.styleMask.insert(.fullSizeContentView)
+                        // Entferne alle Popover-Hintergründe
+                        if let contentView = popoverWindow.contentView {
+                            contentView.wantsLayer = true
+                            contentView.layer?.backgroundColor = NSColor.clear.cgColor
                             
-                            // Aktiviere Hardware-beschleunigte Transparenz
-                            popoverWindow.isMovableByWindowBackground = false
-                            popoverWindow.level = .popUpMenu
-                            
-                            // Liquid Glass Layer-Konfiguration
-                            if let contentView = popoverWindow.contentView {
-                                contentView.wantsLayer = true
-                                contentView.layer?.backgroundColor = NSColor.clear.cgColor
-                                contentView.layer?.borderWidth = 0
-                                
-                                // Aktiviere Metal-basierte Liquid Glass Rendering
-                                contentView.layer?.isOpaque = false
-                                contentView.layer?.allowsEdgeAntialiasing = true
-                                contentView.layer?.masksToBounds = false
-                                
-                                // Liquid Glass Blur und Refraktion
-                                if let layer = contentView.layer {
-                                    layer.compositingFilter = "liquidGlassBlur"
-                                    layer.backgroundFilters = [CIFilter(name: "CIGaussianBlur")!]
-                                    
-                                    // Dynamische Refraktion für echten Glaseffekt
-                                    let refractionFilter = CIFilter(name: "CIGlassDistortion")
-                                    refractionFilter?.setValue(0.2, forKey: "inputScale")
-                                    layer.filters = [refractionFilter].compactMap { $0 }
-                                }
-                            }
-                            
-                            // Entferne Popover-Standard-Background komplett
-                            if let popoverView = popoverWindow.contentView?.subviews.first {
-                                popoverView.wantsLayer = true
-                                popoverView.layer?.backgroundColor = NSColor.clear.cgColor
-                                popoverView.layer?.borderWidth = 0
-                                popoverView.layer?.isOpaque = false
-                                
-                                // Aktiviere durchscheinende Eigenschaften
-                                popoverView.alphaValue = 1.0
-                                if let layer = popoverView.layer {
-                                    layer.allowsEdgeAntialiasing = true
-                                    layer.shouldRasterize = false
-                                }
+                            // Entferne auch Subview-Backgrounds
+                            for subview in contentView.subviews {
+                                subview.wantsLayer = true
+                                subview.layer?.backgroundColor = NSColor.clear.cgColor
                             }
                         }
                     }
